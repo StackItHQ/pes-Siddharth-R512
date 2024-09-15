@@ -37,8 +37,8 @@ def main():
     service = build('sheets', 'v4', credentials=creds)
     
     # Example of reading from a Google Sheet (replace with your Sheet ID and range)
-    SAMPLE_SPREADSHEET_ID = 'your-spreadsheet-id'
-    SAMPLE_RANGE_NAME = 'Sheet1!A1:D5'
+    SAMPLE_SPREADSHEET_ID = '1qPjVehT7mn5W1Qq_B6P0bP_bTtn3iHH9XwpwTrXxdaw'
+    SAMPLE_RANGE_NAME = 'Sheet1!A1:D16'
     
     result = service.spreadsheets().values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range=SAMPLE_RANGE_NAME).execute()
     rows = result.get('values', [])
