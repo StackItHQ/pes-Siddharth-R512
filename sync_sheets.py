@@ -10,7 +10,7 @@ SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 def get_credentials():
     creds = None
     # Path to your credentials.json file
-    creds_path = os.path.join(os.getcwd(), 'credentials.json')
+    creds_path = creds_path = r'C:\Users\siddh\Documents\SuperJoin cred\credentials.json'
     
     # The file token.json stores the user's access and refresh tokens
     token_path = 'token.json'
