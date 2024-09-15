@@ -3,14 +3,15 @@ import google.auth
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from db_connection import create_connection, close_connection
 
 # If modifying these scopes, delete the file token.json.
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
 
 def get_credentials():
     creds = None
     # Path to your credentials.json file
-    creds_path = creds_path = r'C:\Users\siddh\Documents\SuperJoin cred\credentials.json'
+    creds_path = r'C:\Users\siddh\Documents\SuperJoin cred\credentials.json'
     
     # The file token.json stores the user's access and refresh tokens
     token_path = 'token.json'
@@ -29,6 +30,22 @@ def get_credentials():
     
     return creds
 
+def insert_data_to_db(data):
+    # Create a connection to the database
+    connection = create_connection()
+    cursor = connection.cursor()
+
+    # Insert each row into the MySQL database
+    for row in data[1:]:  # Skip the header row
+        sql = "INSERT INTO sheet_data (id, name, email, age) VALUES (%s, %s, %s, %s)"
+        cursor.execute(sql, (row[0], row[1], row[2], row[3]))
+
+    # Commit changes and close connection
+    connection.commit()
+    cursor.close()
+    close_connection(connection)
+    print(f"{len(data) - 1} records inserted into the database.")
+
 def main():
     # Get credentials
     creds = get_credentials()
@@ -36,19 +53,20 @@ def main():
     # Build the service object
     service = build('sheets', 'v4', credentials=creds)
     
-    # Example of reading from a Google Sheet (replace with your Sheet ID and range)
-    SAMPLE_SPREADSHEET_ID = '1qPjVehT7mn5W1Qq_B6P0bP_bTtn3iHH9XwpwTrXxdaw'
-    SAMPLE_RANGE_NAME = 'Sheet1!A1:D16'
+    # Replace with your Google Sheet ID and range
+    SPREADSHEET_ID = '1qPjVehT7mn5W1Qq_B6P0bP_bTtn3iHH9XwpwTrXxdaw'
+    RANGE_NAME = 'Sheet1!A1:D16'
     
-    result = service.spreadsheets().values().get(spreadsheetId=SAMPLE_SPREADSHEET_ID, range=SAMPLE_RANGE_NAME).execute()
+    # Fetch data from the Google Sheet
+    sheet = service.spreadsheets()
+    result = sheet.values().get(spreadsheetId=SPREADSHEET_ID, range=RANGE_NAME).execute()
     rows = result.get('values', [])
     
     if not rows:
-        print('No data found.')
+        print('No data found in the Google Sheet.')
     else:
-        print('Data from the Google Sheet:')
-        for row in rows:
-            print(row)
+        print('Data fetched from the Google Sheet. Inserting into database...')
+        insert_data_to_db(rows)
 
 if __name__ == '__main__':
     main()
