@@ -66,32 +66,32 @@ All the best ✨.
 Here is the link to the video.
 ## *Link to the video:*  [text](https://drive.google.com/file/d/1inaZCBybC2VOQoOcs39NXgQsSTPeCd01/view?usp=sharing)
 
-##Project Approach
+## Project Approach
 Implementation of real time synchronisation system between Google Sheets and MySQL Database.
-###1. Architecture/Components
+### 1. Architecture/Components
 There are 3 main components:
 - Google Sheets API Integration
 - MySQL database connection
 - Synchronisation logic
 
-###2. Authetication and setup
+### 2. Authetication and setup
 - Utilized OAuth 2.0 for secure connection with Google Sheet API, manages tokens and configures MySQL DB connections.
 
-###3. Data Synchronisation
+### 3. Data Synchronisation
 - Fetches data from both Google Sheets and MySQL database
 - Compares data to identify changes
 - Updates both sources to maintain consistency
 - Handles CRUD operations
 
-###4. Sync time
+### 4. Sync time
 - Implements a loop for ongoing synchronization
 - Configurable sync interval (currently set to 5 seconds)
 
-###5. Data Structure
+### 5. Data Structure
 - Mirrors Google sheets structure in MySQL DB.
 - Current schema: id,name,email,age
 
-###6. File Description
+### 6. File Description
 - sync_sheets.py  =  this script contains Google Sheets API interaction and sync logic
 - db_connection.py  =  Handles MySQL DB connection
 - main.py  =  Entry point for running the application
