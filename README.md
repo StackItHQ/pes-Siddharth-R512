@@ -64,7 +64,7 @@ All the best ✨.
 **I encountered an issue while trying to commit and push changes to the repository, and I wasn't sure how to resolve it. As a result, I manually uploaded the files, and I hope this does not cause any discrepancies. I apologize in advance for any inconvenience.**
 
 Here is the link to the video.
-## *Link to the video:*  [text](https://drive.google.com/file/d/1inaZCBybC2VOQoOcs39NXgQsSTPeCd01/view?usp=sharing)
+## *Link to the video:*  [VIDEO DEMO PES2UG21CS524 - Siddharth Rajendran](https://drive.google.com/file/d/1inaZCBybC2VOQoOcs39NXgQsSTPeCd01/view?usp=sharing)
 
 ## Project Approach
 Implementation of real time synchronisation system between Google Sheets and MySQL Database.
