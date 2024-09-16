@@ -3,6 +3,7 @@ import time
 from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
+from googleapiclient.errors import HttpError
 from db_connection import create_connection, close_connection
 import mysql.connector
 
@@ -25,8 +26,12 @@ def get_credentials():
     return creds
 
 def get_sheet_data(service):
-    result = service.spreadsheets().values().get(spreadsheetId=SPREADSHEET_ID, range=RANGE_NAME).execute()
-    return result.get('values', [])
+    try:
+        result = service.spreadsheets().values().get(spreadsheetId=SPREADSHEET_ID, range=RANGE_NAME).execute()
+        return result.get('values', [])
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        return []
 
 def get_db_data(connection):
     cursor = connection.cursor(dictionary=True)
@@ -37,14 +42,16 @@ def get_db_data(connection):
 
 def update_sheet(service, values):
     body = {'values': values}
-    service.spreadsheets().values().update(
-        spreadsheetId=SPREADSHEET_ID, range=RANGE_NAME,
-        valueInputOption='USER_ENTERED', body=body).execute()
+    try:
+        service.spreadsheets().values().update(
+            spreadsheetId=SPREADSHEET_ID, range=RANGE_NAME,
+            valueInputOption='USER_ENTERED', body=body).execute()
+    except HttpError as error:
+        print(f"An error occurred: {error}")
 
 def update_db(connection, data):
     cursor = connection.cursor()
     for row in data[1:]:  # Skip header
-        # Ensure row has all required fields
         if len(row) < 4:
             print(f"Skipping incomplete row: {row}")
             continue
@@ -62,30 +69,20 @@ def update_db(connection, data):
     connection.commit()
     cursor.close()
 
-def delete_from_db(connection, id):
+def delete_record(connection, service, id):
+    # Delete from database
     cursor = connection.cursor()
     cursor.execute("DELETE FROM sheet_data WHERE id = %s", (id,))
     connection.commit()
     cursor.close()
 
-def delete_from_sheet(service, row_index):
-    request = {
-        "requests": [
-            {
-                "deleteDimension": {
-                    "range": {
-                        "sheetId": 0,
-                        "dimension": "ROWS",
-                        "startIndex": row_index,
-                        "endIndex": row_index + 1
-                    }
-                }
-            }
-        ]
-    }
-    service.spreadsheets().batchUpdate(spreadsheetId=SPREADSHEET_ID, body=request).execute()
+    # Delete from spreadsheet
+    sheet_data = get_sheet_data(service)
+    sheet_data = [row for row in sheet_data if row[0] != str(id)]
+    update_sheet(service, sheet_data)
 
 def sync_data(service, connection):
+    print("Starting sync process...")
     sheet_data = get_sheet_data(service)
     db_data = get_db_data(connection)
     
@@ -94,9 +91,11 @@ def sync_data(service, connection):
     
     # Update Sheet with new DB data
     if db_rows != sheet_data[1:]:
+        print("Updating sheet with new database data...")
         update_sheet(service, [sheet_data[0]] + db_rows)
     
     # Update DB with new Sheet data
+    print("Updating database with new sheet data...")
     update_db(connection, sheet_data)
     
     # Handle deletions
@@ -105,12 +104,10 @@ def sync_data(service, connection):
     
     # Delete from DB if not in Sheet
     for id in db_ids - sheet_ids:
-        delete_from_db(connection, id)
+        print(f"Deleting record with id {id} from database...")
+        delete_record(connection, service, id)
     
-    # Delete from Sheet if not in DB
-    for i, row in enumerate(sheet_data[1:], start=1):
-        if row[0] not in db_ids:
-            delete_from_sheet(service, i)
+    print("Sync process completed.")
 
 def main():
     creds = get_credentials()
@@ -120,8 +117,7 @@ def main():
     try:
         while True:
             sync_data(service, connection)
-            print("Sync completed. Waiting for next sync...")
-            time.sleep(10)
+            time.sleep(5)
     except KeyboardInterrupt:
         print("Sync stopped by user.")
     finally:
